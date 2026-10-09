@@ -1,20 +1,20 @@
-from PIL import Image
+from PIL import Image, ImageText, ImageFont, ImageDraw
 import time
 import keyboard
 import random
 
-fileformat = "png"
-size = 20
+fileformat = "bmp"
+fileformat = fileformat
+size = 50
 
-def reset(size):
+def reset(size, color):
     global img, pixels
     img = Image.new("RGB", (size, size))
     pixels = img.load()
 
     for y in range(size):
         for x in range(size):
-            r,g,b = 0, 0, 0
-            pixels[x, y] = (r,g,b)
+            pixels[x, y] = color
 
     img.save(f"game.{fileformat}")
 
@@ -22,9 +22,9 @@ def setpixel(x, y, color):
     global state
     try:
         pixels[x,y] = color
-        img.save(f"game.{fileformat}")
     except Exception as e:
         state = "wallhit"
+        return
 
 snakebody = []
 
@@ -46,8 +46,7 @@ def set_direction(key):
 
 headx, heady, = 0, int((round(size/2)))
 
-reset(size)
-img = Image.open(f"game.{fileformat}").convert("RGB")
+reset(size, (0,0,0))
 
 snakedir = 0
 length = 3
@@ -58,41 +57,59 @@ def moveapple():
 applex, appley = moveapple()
 
 state = "playing"
-reset(size)
 
-while state == "playing":
-    snakebody.append((headx, heady))
-    if snakedir == 0:
-        headx += 1
-    elif snakedir == 1:
-        headx -= 1
-    elif snakedir == 2:
-        heady += 1
-    elif snakedir == 3:
-        heady -= 1
+while True:
+    while state == "playing":
+        reset(size, (0,0,0))
 
-    if (headx,heady) in snakebody:
-        state = "selfhit"
+        draw = ImageDraw.Draw(img)
 
-    if headx == applex and heady == appley:
-        length += 1
-        applex, appley = moveapple()
+        font = ImageFont.truetype("low.ttf", 8)
+        text = ImageText.Text(str(length - 3), font)
+        draw.text((1, -3), text, fill="white")
 
-    setpixel(headx,heady,(0,255,0))
-    brightness = 245
-    if len(snakebody) > length:
-        setpixel(snakebody[0][0], snakebody[0][1], (0, 0, 0))
-        snakebody.pop(0)
-    for i in snakebody:
-        setpixel(i[0],i[1],(0,brightness,0))
-        brightness -= 10
-        if brightness < 105 :
-            brightness = 105
+        snakebody.append((headx, heady))
+        if snakedir == 0:
+            headx += 1
+        elif snakedir == 1:
+            headx -= 1
+        elif snakedir == 2:
+            heady += 1
+        elif snakedir == 3:
+            heady -= 1
 
-    setpixel(applex,appley,(200,0,0))
-    if fileformat == "jpg":
-        setpixel(applex + 1,appley,(200,0,0))
-        setpixel(applex - 1,appley,(200,0,0))
-        setpixel(applex,appley + 1,(200,0,0))
-        setpixel(applex,appley - 1,(200,0,0))
-    time.sleep(0.2)
+        if not (0 <= headx < size and 0 <= heady < size):
+            state = "wallhit"
+            break
+
+        if (headx,heady) in snakebody:
+            state = "selfhit"
+
+        if headx == applex and heady == appley:
+            length += 1
+            applex, appley = moveapple()
+
+        setpixel(headx,heady,(0,255,0))
+        brightness = 245
+        if len(snakebody) > length:
+            setpixel(snakebody[0][0], snakebody[0][1], (0, 0, 0))
+            snakebody.pop(0)
+        for i in snakebody:
+            setpixel(i[0],i[1],(0,brightness,0))
+            brightness -= 10
+            if brightness < 105 :
+                brightness = 105
+
+        setpixel(applex,appley,(200,0,0))
+        if fileformat == "jpg":
+            setpixel(applex + 1,appley,(200,0,0))
+            setpixel(applex - 1,appley,(200,0,0))
+            setpixel(applex,appley + 1,(200,0,0))
+            setpixel(applex,appley - 1,(200,0,0))
+
+        img.save(f"game.{fileformat}")
+        time.sleep(0.2)
+
+    reset(size, (255,0,0))
+    time.sleep(5)
+    state = "playing"
