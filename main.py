@@ -11,10 +11,19 @@ def reset(size, color):
     global img, pixels
     img = Image.new("RGB", (size, size))
     pixels = img.load()
-
+    mod = 0
     for y in range(size):
+        mod = 1 - mod
         for x in range(size):
-            pixels[x, y] = color
+            if color == (0,0,0):
+                if mod == 1:
+                    pixels[x, y] = color
+                else:
+                    pixels[x, y] = (20,20,20)
+            else:
+                pixels[x, y] = color
+            mod = 1 - mod
+        
 
     img.save(f"game.{fileformat}")
 
@@ -92,7 +101,6 @@ while True:
         setpixel(headx,heady,(0,255,0))
         brightness = 245
         if len(snakebody) > length:
-            setpixel(snakebody[0][0], snakebody[0][1], (0, 0, 0))
             snakebody.pop(0)
         for i in snakebody:
             setpixel(i[0],i[1],(0,brightness,0))
@@ -113,3 +121,7 @@ while True:
     reset(size, (255,0,0))
     time.sleep(5)
     state = "playing"
+    snakedir = 0
+    length = 3  
+    headx, heady, = 0, int((round(size/2)))
+    snakebody = []
